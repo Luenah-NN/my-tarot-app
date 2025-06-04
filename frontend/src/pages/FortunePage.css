@@ -1,0 +1,134 @@
+/* frontend/src/pages/FortunePage.css */
+
+/* 채팅창 내 버튼 스타일 */
+.chat-bubble-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px 0;
+}
+.topic-buttons button,
+.chat-bubble-buttons button {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.topic-buttons button:hover,
+.chat-bubble-buttons button:hover {
+  background-color: #e0e0e0;
+}
+
+/* chat-window-container: 상대적 위치 지정 */
+.chat-window-container {
+  position: relative;
+}
+/* 채팅창 블러 효과 */
+.chat-window.blur {
+  filter: blur(4px);
+}
+/* spinner-overlay: 채팅창 위에 반투명 레이어 + 스피너 중앙 배치 */
+.spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+/* spinner-group: 4개 스피너 나란히 */
+.spinner-group {
+  display: flex;
+  gap: 60px;
+}
+/* spinner 회전 애니메이션 */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* .spinner: 크기 및 애니메이션 조정 */
+.spinner {
+  width: 200px;
+  height: auto;
+  animation: spin 1s linear infinite;
+}
+/* overlay-background: 모달 뒷배경 */
+.overlay-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+/* modal-content: 이미지 위, 텍스트 아래 레이아웃 */
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+  max-width: 600px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+/* 열릴 때 페이드인 & 확대 애니메이션 */
+.animate-modal-vertical {
+  animation: modalFadeInVertical 0.3s ease-out;
+}
+@keyframes modalFadeInVertical {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+/* modal-image-vertical: 카드 이미지를 위쪽에 배치 */
+.modal-image-vertical {
+  width: 100%;
+  background-color: #f9f9f9;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-image-vertical img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 4px;
+}
+/* modal-description-vertical: 해석 텍스트 아래, 가운데 정렬 */
+.modal-description-vertical {
+  padding: 1rem;
+  text-align: center;
+  background-color: #fff;
+}
+.modal-description-vertical p {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-size: 1rem;
+  margin: 0;
+}
+
+
+

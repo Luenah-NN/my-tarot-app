@@ -1,0 +1,54 @@
+/* frontend/src/components/ChatBubble.css */
+
+.chat-bubble {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.chat-bubble.left {
+  justify-content: flex-start;
+}
+
+.chat-bubble.right {
+  justify-content: flex-end;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 6px;
+}
+
+/* ↓ 수정된 부분: white-space 와 overflow-wrap 추가 ↓ */
+.bubble {
+  max-width: 70%;
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  padding: 8px 12px;
+
+  /* 줄바꿈(\n)을 그대로 반영하고, 단어 단위로라도 내려쓰기 */
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+
+  /* 기존 설정 */
+  /* word-break: keep-all; */
+}
+
+.chat-bubble.right .bubble {
+  background-color: #d0e8ff;
+}
+
+.bubble-text {
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.bubble-text:last-child {
+  margin-bottom: 0;
+}
+
+
