@@ -1,6 +1,6 @@
 // frontend/src/pages/FortunePage.jsx
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import ChatBubble from "../components/ChatBubble";
 import ChatInput from "../components/ChatInput";
 import cardsData from "../data/cardsData";
@@ -16,13 +16,13 @@ import "./FortunePage.css";
 function FortunePage() {
   // 1) 채팅 메시지 배열
   const [messages, setMessages] = useState([]);
-  // 2) 단계 관리: 
+  // 2) 단계 관리:
   // 'start' → 'waitingTopic' → 'awaitCustomQuestion' → 'showCards' →
   // 'waitingInterpret' → 'postInterpret' → 'done'
   const [stage, setStage] = useState("start");
   // 3) 로딩 중 여부
   const [loading, setLoading] = useState(false);
-  // 4) 사용자가 선택한 topic
+  // 4) 사용자가 선택한 topic ('love','health','relationship','academic','daily','work','money','custom')
   const [selectedTopic, setSelectedTopic] = useState("");
   // 5) 사용자 커스텀 질문
   const [customQuestion, setCustomQuestion] = useState("");
@@ -36,74 +36,88 @@ function FortunePage() {
   // 8) 채팅창 자동 스크롤
   const chatEndRef = useRef(null);
 
-  const addMessage = (message) => {
-    setMessages((prev) => [...prev, message]);
-  };
+  // 채팅 메시지 추가 헬퍼
+  const addMessage = useCallback(
+    (message) => {
+      setMessages((prev) => [...prev, message]);
+    },
+    [setMessages]
+  );
 
-  // 첫 진입
+  // 첫 진입: 마왕이 “ㅇㄴㅅㅇ?”만 보내고 다음 단계로
   useEffect(() => {
     if (stage === "start") {
       addMessage({ sender: "mawang", text: "ㅇㄴㅅㅇ?" });
       setStage("waitingTopic");
     }
-  }, [stage]);
+  }, [stage, addMessage]);
 
-  // topic 선택
-  const handleTopicClick = (topicKey) => {
-    if (topicKey === "custom") {
-      setSelectedTopic("custom");
-      addMessage({ sender: "user", text: "자유 질문" });
-      addMessage({ sender: "mawang", text: "어떤 질문이든 입력해 주세요." });
-      setStage("awaitCustomQuestion");
-      return;
-    }
+  // topic 선택 버튼 클릭 핸들러
+  const handleTopicClick = useCallback(
+    (topicKey) => {
+      if (topicKey === "custom") {
+        setSelectedTopic("custom");
+        addMessage({ sender: "user", text: "자유 질문" });
+        addMessage({ sender: "mawang", text: "어떤 질문이든 입력해 주세요." });
+        setStage("awaitCustomQuestion");
+        return;
+      }
 
-    let topicKr = "";
-    switch (topicKey) {
-      case "love":
-        topicKr = "연애";
-        break;
-      case "health":
-        topicKr = "건강";
-        break;
-      case "relationship":
-        topicKr = "인간관계";
-        break;
-      case "academic":
-        topicKr = "학업";
-        break;
-      case "daily":
-        topicKr = "오늘의 운세";
-        break;
-      case "work":
-        topicKr = "직장";
-        break;
-      case "money":
-        topicKr = "금전";
-        break;
-    }
+      let topicKr = "";
+      switch (topicKey) {
+        case "love":
+          topicKr = "연애";
+          break;
+        case "health":
+          topicKr = "건강";
+          break;
+        case "relationship":
+          topicKr = "인간관계";
+          break;
+        case "academic":
+          topicKr = "학업";
+          break;
+        case "daily":
+          topicKr = "오늘의 운세";
+          break;
+        case "work":
+          topicKr = "직장";
+          break;
+        case "money":
+          topicKr = "금전";
+          break;
+        default:
+          topicKr = "";
+          break;
+      }
 
-    setSelectedTopic(topicKey);
-    addMessage({ sender: "user", text: topicKr });
-    addMessage({ sender: "mawang", text: "카드를 뽑아볼게요..." });
-    setStage("showCards");
-  };
+      setSelectedTopic(topicKey);
+      addMessage({ sender: "user", text: topicKr });
+      addMessage({ sender: "mawang", text: "카드를 뽑아볼게요..." });
+      setStage("showCards");
+    },
+    [addMessage]
+  );
 
-  // 커스텀 질문 처리
-  const handleCustomSubmit = (text) => {
-    const question = text.trim();
-    if (!question) {
-      addMessage({ sender: "user", text: "" });
-      addMessage({ sender: "mawang", text: "질문을 입력해 주세요." });
-      return;
-    }
-    setCustomQuestion(question);
-    addMessage({ sender: "user", text: question });
-    addMessage({ sender: "mawang", text: "카드를 뽑아볼게요..." });
-    setStage("showCards");
-  };
+  // 커스텀 질문 입력 후 처리
+  const handleCustomSubmit = useCallback(
+    (text) => {
+      const question = text.trim();
+      if (question === "") {
+        // 빈 질문도 허용 안 함, 다시 요청
+        addMessage({ sender: "user", text: "" });
+        addMessage({ sender: "mawang", text: "질문을 입력해 주세요." });
+        return;
+      }
+      setCustomQuestion(question);
+      addMessage({ sender: "user", text: question });
+      addMessage({ sender: "mawang", text: "카드를 뽑아볼게요..." });
+      setStage("showCards");
+    },
+    [addMessage]
+  );
 
-  // 카드 뽑기
+  // showCards 단계: 무작위로 3장 카드 뽑고, 채팅창에 가로 정렬로 표시
   useEffect(() => {
     if (stage === "showCards") {
       const shuffled = [...cardsData].sort(() => 0.5 - Math.random());
@@ -132,9 +146,9 @@ function FortunePage() {
         setStage("waitingInterpret");
       }, 500);
     }
-  }, [stage]);
+  }, [stage, addMessage]);
 
-  // 해석 요청
+  // waitingInterpret 단계: 로딩 상태를 켜고, 백엔드로 POST → 응답받으면 해석 추가 → postInterpret 단계
   useEffect(() => {
     if (stage === "waitingInterpret") {
       setLoading(true);
@@ -154,18 +168,21 @@ function FortunePage() {
 
       fetch(`${process.env.REACT_APP_API_URL}/api/interpret`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       })
         .then((res) => res.json())
         .then((data) => {
+          // data.interpretation에 ChatGPT(백엔드)가 만들어 준 해석이 담겨 내려옵니다.
           addMessage({ sender: "mawang", text: data.interpretation });
           // 해석 후 추가 질문 묻기
           addMessage({ sender: "mawang", text: "추가적인 질문이 있나요?" });
           setStage("postInterpret");
         })
         .catch((err) => {
-          console.error(err);
+          console.error("백엔드 호출 오류:", err);
           addMessage({
             sender: "mawang",
             text: "죄송합니다. 해석 중 오류가 발생했습니다.",
@@ -177,23 +194,26 @@ function FortunePage() {
           setLoading(false);
         });
     }
-  }, [stage]);
+  }, [stage, selectedTopic, pickedCards, customQuestion, addMessage]);
 
-  // 추가 질문 응답
-  const handleAdditionalChoice = (choice) => {
-    if (choice === "yes") {
-      addMessage({ sender: "user", text: "있습니다" });
-      addMessage({ sender: "mawang", text: "어떤 주제로 다시 보시겠어요?" });
-      setStage("waitingTopic");
-    } else {
-      addMessage({ sender: "user", text: "없습니다" });
-      addMessage({ sender: "mawang", text: "그럼... 빠잇!!!" });
-      setStage("done");
-    }
-  };
+  // 추가 질문 여부 처리 버튼 핸들러
+  const handleAdditionalChoice = useCallback(
+    (choice) => {
+      if (choice === "yes") {
+        addMessage({ sender: "user", text: "있습니다" });
+        addMessage({ sender: "mawang", text: "어떤 주제로 다시 보시겠어요?" });
+        setStage("waitingTopic");
+      } else {
+        addMessage({ sender: "user", text: "없습니다" });
+        addMessage({ sender: "mawang", text: "그럼... 빠잇!!!" });
+        setStage("done");
+      }
+    },
+    [addMessage]
+  );
 
-  // 카드 클릭 모달
-  const handleCardClick = (msgObj) => {
+  // 카드 클릭 시 모달 열기 (역방향 여부에 따라 회전 추가)
+  const handleCardClick = useCallback((msgObj) => {
     if (msgObj.isCard) {
       setModalImageUrl(msgObj.imageUrl);
       setModalStyleRotate(msgObj.styleRotate || "none");
@@ -201,19 +221,32 @@ function FortunePage() {
       setModalInterpretation(`${msgObj.name_kr} (${oText})`);
       setIsModalOpen(true);
     }
-  };
+  }, []);
 
-  // 자동 스크롤
+  // 메시지 변경 시 자동 스크롤
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
+  // 렌더링: topic 버튼 목록
+  const allTopics = [
+    { key: "love", label: "연애" },
+    { key: "health", label: "건강" },
+    { key: "relationship", label: "인간관계" },
+    { key: "academic", label: "학업" },
+    { key: "daily", label: "오늘의 운세" },
+    { key: "work", label: "직장" },
+    { key: "money", label: "금전" },
+    { key: "custom", label: "자유 질문" },
+  ];
+
   return (
     <div className="fortune-page" style={{ padding: "1rem" }}>
       <h2>🔮 타로 운세 보기 🔮</h2>
 
+      {/* 채팅창 래퍼 (블러 및 오버레이 처리를 위해 위치: relative) */}
       <div className="chat-window-container">
         <div
           className={`chat-window${loading ? " blur" : ""}`}
@@ -301,7 +334,7 @@ function FortunePage() {
           ))}
           <div ref={chatEndRef} />
 
-          {/* 추가 질문 "있습니다"/"없습니다" 버튼 (postInterpret 단계) */}
+          {/* postInterpret 단계: 추가 질문 "있습니다"/"없습니다" 버튼 */}
           {stage === "postInterpret" && (
             <div className="chat-bubble-buttons">
               <button onClick={() => handleAdditionalChoice("yes")}>
@@ -313,23 +346,18 @@ function FortunePage() {
             </div>
           )}
 
-          {/* topic 선택 버튼 (waitingTopic 단계) */}
+          {/* waitingTopic 단계: topic 선택 버튼 */}
           {stage === "waitingTopic" && (
             <div className="topic-buttons chat-bubble-buttons">
-              <button onClick={() => handleTopicClick("love")}>연애</button>
-              <button onClick={() => handleTopicClick("health")}>건강</button>
-              <button onClick={() => handleTopicClick("relationship")}>
-                인간관계
-              </button>
-              <button onClick={() => handleTopicClick("academic")}>학업</button>
-              <button onClick={() => handleTopicClick("daily")}>오늘의 운세</button>
-              <button onClick={() => handleTopicClick("work")}>직장</button>
-              <button onClick={() => handleTopicClick("money")}>금전</button>
-              <button onClick={() => handleTopicClick("custom")}>자유 질문</button>
+              {allTopics.map((t) => (
+                <button key={t.key} onClick={() => handleTopicClick(t.key)}>
+                  {t.label}
+                </button>
+              ))}
             </div>
           )}
 
-          {/* 커스텀 질문 입력 대기 (awaitCustomQuestion 단계) */}
+          {/* awaitCustomQuestion 단계: 커스텀 질문 입력 대기 */}
           {stage === "awaitCustomQuestion" && (
             <ChatInput
               onSend={handleCustomSubmit}
@@ -357,6 +385,7 @@ function FortunePage() {
             className="overlay-background"
             onClick={() => setIsModalOpen(false)}
           />
+
           <div className="modal-content animate-modal-vertical">
             <div className="modal-image-vertical">
               <img
@@ -376,6 +405,3 @@ function FortunePage() {
 }
 
 export default FortunePage;
-
-
-
