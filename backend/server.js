@@ -98,7 +98,7 @@ app.post("/api/interpret", async (req, res) => {
       
       // OpenAI ChatGPT API 호출
       const completion = await openai.chat.completions.create({
-        model: "o3-mini",
+        model: "gpt-4.1-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -125,7 +125,7 @@ app.post("/api/interpret", async (req, res) => {
 
       // OpenAI ChatGPT API 호출
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4.1-nano",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
