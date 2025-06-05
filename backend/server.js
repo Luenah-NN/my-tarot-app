@@ -82,35 +82,59 @@ app.post("/api/interpret", async (req, res) => {
     }
 
     // ChatGPT 시스템 프롬프트
-    const systemPrompt = `당신은 전문 타로 리더입니다. 사용자가 선택한 주제("${topicKr}")에 맞춰, 세 개의 타로 카드 이름(정위치 또는 역위치 포함)을 바탕으로 상세히 한국어로 해석해 주세요.`;
-
-    // 사용자 프롬프트: 영문/한글 카드 이름과 주제를 함께 전달
-    // “custom”일 경우, 사용자 질문(customQuestion)을 추가로 끼워넣습니다.
-    let userPrompt =
-      `뽑힌 세 장의 타로 카드는 다음과 같습니다:\n` +
-      `영문: ${cardDescriptions.join(", ")}\n` +
-      `한글: ${cardDescriptionsKr.join(", ")}\n` +
-      `그리고 주제는 "${topicKr}" 입니다.\n`;
-
     if (topic === "custom" && typeof customQuestion === "string" && customQuestion.trim() !== "") {
-      // ← 수정된 부분: customQuestion이 있으면 설명에 포함
-      userPrompt += `사용자 질문: "${customQuestion.trim()}"\n`;
+      // ───── "custom" 주제이면서 customQuestion이 있을 때 ─────
+      systemPrompt = 
+        "당신은 전문 타로 리더입니다. 사용자의 질문에 맞춰, " +
+        "세 개의 타로 카드 이름(정위치 또는 역위치 포함)을 바탕으로 상세히 한국어로 대답해 주세요.";
+
+      userPrompt =
+        `뽑힌 세 장의 타로 카드는 다음과 같습니다:\n` +
+        `영문: ${cardDescriptions.join(", ")}\n` +
+        `한글: ${cardDescriptionsKr.join(", ")}\n` +
+        `그리고 질문은 "${customQuestion.trim()}" 입니다.\n\n` +
+        `${customQuestion.trim()}라는 질문에 대해 카드 3장의 결과를 종합해서 ` +
+        `3~5문단 분량의 한국어로 대답해주세요.`;
+      
+      // OpenAI ChatGPT API 호출
+      const completion = await openai.chat.completions.create({
+        model: "o3-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        max_tokens: 2000,
+        temperature: 0.8
+      });
+
+
+    } else {
+      // ───── "custom"이 아니거나 customQuestion이 없을 때 ─────
+      systemPrompt =
+        `당신은 전문 타로 리더입니다. 사용자가 선택한 주제("${topicKr}")에 맞춰, ` +
+        `세 개의 타로 카드 이름(정위치 또는 역위치 포함)을 바탕으로 상세히 한국어로 해석해 주세요.`;
+
+      userPrompt =
+        `뽑힌 세 장의 타로 카드는 다음과 같습니다:\n` +
+        `영문: ${cardDescriptions.join(", ")}\n` +
+        `한글: ${cardDescriptionsKr.join(", ")}\n` +
+        `그리고 주제는 "${topicKr}" 입니다.\n\n` +
+        // 필요하다면 else 블록에도 추가 안내 문구를 넣을 수 있습니다.
+        `각각의 카드는 "${topicKr}"라는 주제와 관련하여 어떤 의미를 갖는지 1문단, ` +
+        `카드 3장의 결과를 종합해서 또 1문단 분량의 한국어로 알려주세요.`;
+
+      // OpenAI ChatGPT API 호출
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        max_tokens: 1000,
+        temperature: 0.8
+      });
+    
     }
-
-    userPrompt +=
-      `\n각각의 카드는 ${topicKr}라는 주제와 관련하여 어떤 의미를 갖는지 1문단 분량으로 설명하고, ` +
-      `${topicKr}라는 주제에 대해 카드 3장의 결과를 종합해서 1문단 분량의 한국어로 알려주세요.`;
-
-    // OpenAI ChatGPT API 호출
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
-      max_tokens: 1000,
-      temperature: 0.8
-    });
 
     const interpretation = completion.choices[0].message.content.trim();
 
